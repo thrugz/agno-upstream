@@ -652,7 +652,7 @@ def _bind_member_result_store(team: "Team", member: Union[Agent, "Team"]) -> Non
             )
         else:
             store = team._result_store
-    elif declares_own_store:
+    elif member.offload_tool_results:
         from agno.offload.setup import build_result_store
 
         # The team does not offload, but this member asked to. Its setting is
@@ -660,8 +660,14 @@ def _bind_member_result_store(team: "Team", member: Union[Agent, "Team"]) -> Non
         # governs the team's own tool results, not whether a member's
         # configuration survives being added to a team. Without this the store
         # is overwritten with None below, silently, while the member's public
-        # ``offload_tool_results`` still reports a ResultStore, so the member
-        # looks configured and offloads nothing.
+        # ``offload_tool_results`` still reports what the caller set, so the
+        # member looks configured and offloads nothing.
+        #
+        # Truthiness, not ``declares_own_store``: ``offload_tool_results=True``
+        # is the documented way to ask for the defaults and has to survive the
+        # same way a ResultStore does. None and False both fall through to the
+        # assignment below and leave the member without a store, which is what
+        # they mean.
         #
         # Payloads go to the member's own db when it has one, falling back to
         # the team's. There is no team store for them to be readable from here,

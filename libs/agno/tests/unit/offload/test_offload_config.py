@@ -115,6 +115,21 @@ def test_a_member_keeps_its_own_store_when_the_team_does_not_offload(db):
     assert member._result_store.db is db
 
 
+def test_a_member_asking_for_the_defaults_keeps_them_when_the_team_does_not_offload(db):
+    """``offload_tool_results=True`` has to survive the same way a ResultStore does.
+
+    True is the documented way to ask for the defaults, so keying the member
+    branch on ``isinstance(..., ResultStore)`` would honour the verbose form and
+    silently drop the common one.
+    """
+    member = Agent(name="member", db=db, offload_tool_results=True)
+    team = Team(name="team", members=[member], db=db)  # the team itself does not offload
+    team.initialize_team()
+
+    assert member._result_store is not None
+    assert member._result_store.db is db
+
+
 def test_a_member_without_its_own_db_binds_to_the_team_db(db):
     member = Agent(name="member", db=None, offload_tool_results=ResultStore(threshold_chars=100))
     team = Team(name="team", members=[member], db=db)
